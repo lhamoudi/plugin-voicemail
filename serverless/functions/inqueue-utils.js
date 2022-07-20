@@ -1,6 +1,6 @@
 /*
- *Synopsis:  This function provides supporting UTILITY functions for handling of Flex In-Queue Callback/Voicemail capabilities to include:
- *    1. Re-queuing of callback and voicemail tasks;
+ *Synopsis:  This function provides supporting UTILITY functions for handling of Flex In-Queue Voicemail capabilities to include:
+ *    1. Re-queuing of voicemail tasks;
  *    2. Deletion of voicemail call recording media and transcripts
  *
  *These UTILITY methods directly support FLEX plugin functionality initiated by the Flex agent (worker)
@@ -11,7 +11,7 @@
  *
  *Function Methods (mode)
  * - deleteRecordResources    => logic for deletion of recording media and transcript text (recordingSid, transcriptionSid)
- * - requeueTasks             => logic for re-queuing of callback/voicemail task (create new task from existing task attributes)
+ * - requeueTasks             => logic for re-queuing of voicemail task (create new task from existing task attributes)
  *
  *Customization:
  * - None
@@ -45,9 +45,6 @@ exports.handler = JWEValidator(async function (context, event, callback) {
   //    global function to update callback Task attributes
   //    controlling the UI call button view
   async function PluginTaskUpdate(type, taskSid, attr, state) {
-    if (type === 'callback') {
-      attr.ui_plugin.cbCallButtonAccessibility = event.state;
-    }
     if (type === 'voicemail') {
       attr.ui_plugin.vmCallButtonAccessibility = event.state;
       attr.ui_plugin.vmRecordButtonAccessibility = !event.state;

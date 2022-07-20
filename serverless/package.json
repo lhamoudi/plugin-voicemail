@@ -1,5 +1,5 @@
 {
-  "name": "plugin-queued-callbacks-voicemail-functions",
+  "name": "plugin-voicemail-functions",
   "version": "0.0.1",
   "private": true,
   "scripts": {

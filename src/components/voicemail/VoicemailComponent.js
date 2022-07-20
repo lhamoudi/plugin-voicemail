@@ -26,8 +26,6 @@ export default class VoicemailComponent extends React.Component {
   vmCallButtonAccessibility = async (state) =>
     inqueueUtils.callButtonAccessibility(this.props.task, 'voicemail', state);
 
-  startTransfer = async () => inqueueUtils.startTransfer(this.props.task);
-
   // web service call to delete the call recording/transcript
   deleteResources = async () => inqueueUtils.deleteResource(this.props.task);
 
@@ -147,17 +145,6 @@ export default class VoicemailComponent extends React.Component {
           disabled={attributes.ui_plugin.vmCallButtonAccessibility}
         >
           Call Contact Now ( {attributes.to} )
-        </Button>
-
-        <p style={styles.textCenter}>Not answering? Requeue to retry later.</p>
-        <Button
-          style={styles.cbButton}
-          variant="outlined"
-          color="primary"
-          onClick={async () => this.startTransfer()}
-          disabled={count >= 3}
-        >
-          Requeue Voicemail ( {attributes.placeCallRetry} of 3 )
         </Button>
         <p style={styles.textAlert}>Upon successful contact, delete the recording resources.</p>
         <Button

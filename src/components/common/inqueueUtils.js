@@ -22,22 +22,6 @@ export const callButtonAccessibility = async (task, type, state) => {
   });
 };
 
-export const startTransfer = async (task) => {
-  const { taskSid, attributes, workflowSid, queueName } = task;
-  const data = {
-    mode: 'requeueTasks',
-    type: 'callback',
-    Token: Flex.Manager.getInstance().user.token,
-    taskSid,
-    attributes,
-    workflowSid,
-    queueName,
-    state: false,
-  };
-
-  return http.post(url, data, { verbose: true, title: 'Requeue web service' });
-};
-
 export const deleteResource = async (task) => {
   const { taskSid, workflowSid, queueName, attributes } = task;
   const { recordingSid, transcriptionSid } = attributes;

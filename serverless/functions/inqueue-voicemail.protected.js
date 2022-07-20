@@ -1,6 +1,6 @@
 /*
  *Synopsis:  This function provides complete handling of Flex In-Queue Voicemail capabilities to include:
- *    1. request to leave a voicemail with callback to originating ANI
+ *    1. request to leave a voicemail
  *
  *Voicemail tasks are created and linked to the originating call (Flex Insights reporting). The flex plugin provides
  *a UI for management of the voicemail request including a re-queueing capability.
@@ -17,7 +17,6 @@
  *
  *Customization:
  * - Set TTS voice option
- * - Set initial priority of callback task (default: 50)
  * - Set timezone configuration ( server_tz )
  *
  *Install/Config: See documentation
@@ -31,10 +30,22 @@ const optionsPath = Runtime.getFunctions().options.path;
 const options = require(optionsPath);
 
 // create the voicemail task
-async function createVoicemailTask(event, client, taskInfo, ringback) {
+async function createVoicemailTask(event, client, taskInfo, workflowSid, ringback) {
   const time = getTime(options.TimeZone);
 
+  const originalTaskAttributes = JSON.parse(taskInfo.data.attributes);
+
   const taskAttributes = {
+    /*
+     * THIS IS WHERE YOU WOULD APPLY ANY ATTRIBUTES YOU WANT TO RETAIN FROM ORIGINAL CALL TASK
+     */
+    /*
+     * e.g:
+     *
+     * region: originalTaskAttributes.region,
+     * office: originalTaskAttributes.office,
+     * callType: originalTaskAttributes.callType,
+     */
     taskType: 'voicemail',
     ringback,
     to: event.Caller, // Inbound caller
@@ -54,7 +65,6 @@ async function createVoicemailTask(event, client, taskInfo, ringback) {
       vmCallButtonAccessibility: false,
       vmRecordButtonAccessibility: true,
     },
-    placeCallRetry: 1,
   };
 
   try {
@@ -63,7 +73,7 @@ async function createVoicemailTask(event, client, taskInfo, ringback) {
       type: 'voicemail',
       taskChannel: 'voicemail',
       priority: options.VoiceMailTaskPriority,
-      workflowSid: taskInfo.workflowSid,
+      workflowSid,
     });
   } catch (error) {
     console.log('createVoicemailTask Error');
@@ -76,25 +86,26 @@ exports.handler = async function (context, event, callback) {
   const twiml = new Twilio.twiml.VoiceResponse();
   const domain = `https://${context.DOMAIN_NAME}`;
 
-  const { CallSid } = event;
-  const { mode } = event;
-  let { taskSid } = event;
+  // Retrieve event arguments
+  const { digits, mode, CallSid } = event;
+
+  console.log('Digits: ', digits);
+  console.log('Mode: ', mode);
 
   // Load options
   const { sayOptions, VoiceMailAlertTone } = options;
 
-  // main logic for callback methods
+  let task = null;
+
   switch (mode) {
     //  initial logic to cancel the task and prepare the call for Recording
     case 'pre-process':
-      //  Get taskSid based on taskSid or CallSid
-      if (!taskSid) {
-        const taskInfo = await getTask(context, CallSid);
-        ({ taskSid } = taskInfo);
-      }
+      //  Get taskSid based on CallSid
+      task = await getTask(context, CallSid);
+      const { taskSid } = task;
 
       // Redirect Call to Voicemail main menu
-      const redirectUrl = `${domain}/inqueue-voicemail?mode=main${taskSid ? `&taskSid=${taskSid}` : ''}`;
+      const redirectUrl = `${domain}/inqueue-voicemail?mode=main`;
       try {
         await client.calls(CallSid).update({ method: 'POST', url: redirectUrl });
       } catch (error) {
@@ -106,7 +117,6 @@ exports.handler = async function (context, event, callback) {
       await cancelTask(client, context.TWILIO_WORKSPACE_SID, taskSid);
 
       return callback(null, '');
-      break;
 
     case 'main':
       //  Main logic for Recording the voicemail
@@ -122,39 +132,26 @@ exports.handler = async function (context, event, callback) {
       });
       twiml.say(sayOptions, 'I did not capture your recording');
       return callback(null, twiml);
-      break;
 
     //  End the voicemail interaction - hang up call
     case 'success':
       twiml.say(sayOptions, 'Your voicemail has been successfully received... goodbye');
       twiml.hangup();
       return callback(null, twiml);
-      break;
 
     /*
-     *  handler to submit the callback
+     *  handler to submit the voicemail
      *  create the task here
      */
     case 'submitVoicemail':
-      /*
-       *  Steps
-       *  1. Fetch TaskSid ( read task w/ attribute of call_sid);
-       *  2. Update existing task (assignmentStatus==>'canceled'; reason==>'callback requested' )
-       *  3. Create new task ( callback );
-       *  4. Hangup callback
-       *
-       *  main callback logic
-       */
-      const taskInfo = await getTask(context, taskSid || CallSid);
+      task = await getTask(context, CallSid);
       // TODO: handle error in getTask
 
       //  create the Voicemail task
       const ringBackUrl = VoiceMailAlertTone.startsWith('https://') ? VoiceMailAlertTone : domain + VoiceMailAlertTone;
-      await createVoicemailTask(event, client, taskInfo, ringBackUrl);
+      await createVoicemailTask(event, client, task, context.VOICEMAIL_WORKFLOW_SID, ringBackUrl);
       return callback(null, '');
-      break;
     default:
       return callback(500, 'Mode not specified');
-      break;
   }
 };

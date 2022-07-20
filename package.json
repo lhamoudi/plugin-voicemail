@@ -1,6 +1,6 @@
 {
-  "name": "plugin-queued-callbacks-and-voicemail",
-  "version": "1.0.0",
+  "name": "plugin-voicemail",
+  "version": "4.0.0",
   "private": true,
   "scripts": {
     "postinstall": "flex-plugin pre-script-check",
@@ -9,7 +9,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "flex-plugin-scripts": "4.1.0",
+    "@twilio/flex-plugin-scripts": "5.1.2",
     "moment": "2.24.0",
     "moment-timezone": "0.5.28",
     "react": "16.5.2",
@@ -18,7 +18,8 @@
     "url-join": "^4.0.1"
   },
   "devDependencies": {
-    "@twilio-labs/serverless-api": "^5.2.1",
+    "@material-ui/core": "^1.0.0",
+    "@material-ui/icons": "^2.0.3",
     "@twilio/flex-ui": "^1",
     "eslint": "^7.30.0",
     "eslint-config-twilio": "^1.35.1",

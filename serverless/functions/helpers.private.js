@@ -16,6 +16,7 @@ function handleError(error) {
 
 /**
  * Get a Task Resource
+ * WARNING: Use of Evaluate Task Attributes is strictly rate limited to 3 CPS
  *
  * @param {object} context Twilio function context object
  * @param {string} sid Call Sid or Task Sid
