@@ -66,14 +66,29 @@ function getTask(context, sid) {
  *
  * @param {Object} client Twilio Client
  * @param {string} workspaceSid SID of the workspace the task belong to
- * @param {string} taskSid SID of the task to be cancelled
+ * @param {string} task Task to be cancelled
  */
-async function cancelTask(client, workspaceSid, taskSid) {
+async function cancelTask(client, workspaceSid, task) {
+  console.debug(`Attribs are ${task.attributes}`);
+  const attributes = JSON.parse(task.attributes);
+
+  const newAttributes = {
+    ...attributes,
+    conversations: {
+      ...attributes.conversations,
+      abandoned: 'Follow-Up',
+    },
+  };
+
   try {
-    await client.taskrouter.workspaces(workspaceSid).tasks(taskSid).update({
-      assignmentStatus: 'canceled',
-      reason: 'Voicemail Request',
-    });
+    await client.taskrouter
+      .workspaces(workspaceSid)
+      .tasks(task.sid)
+      .update({
+        assignmentStatus: 'canceled',
+        reason: 'Voicemail Request',
+        attributes: JSON.stringify(newAttributes),
+      });
   } catch (error) {
     console.log('cancelTask Error');
     handleError(error);

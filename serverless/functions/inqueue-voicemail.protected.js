@@ -113,8 +113,11 @@ exports.handler = async function (context, event, callback) {
         handleError(error);
       }
 
-      //  Cancel (update) the task given taskSid
-      await cancelTask(client, context.TWILIO_WORKSPACE_SID, taskSid);
+      /*
+       *  Cancel (update) the task given taskSid
+       * (This allows us to override the default cancellation that would otherwise occur when we update the TwiML on this call)
+       */
+      await cancelTask(client, context.TWILIO_WORKSPACE_SID, task.data);
 
       return callback(null, '');
 
